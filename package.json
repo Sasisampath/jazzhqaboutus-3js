@@ -1,0 +1,43 @@
+{
+  "name": "jazzhq-public",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint src",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@ant-design/nextjs-registry": "^1.3.0",
+    "@react-three/drei": "^10.7.8",
+    "@react-three/fiber": "^9.7.0",
+    "@reduxjs/toolkit": "^2.12.0",
+    "@tanstack/react-query": "^5.101.1",
+    "antd": "^6.4.5",
+    "axios": "^1.18.1",
+    "lucide-react": "^1.21.0",
+    "next": "16.2.9",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-redux": "^9.3.0",
+    "redux-persist": "^6.0.0",
+    "sass": "^1.101.0",
+    "three": "^0.186.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/three": "^0.186.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.9",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
