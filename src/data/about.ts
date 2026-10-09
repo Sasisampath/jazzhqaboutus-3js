@@ -24,11 +24,11 @@ export const ABOUT_FOUNDERS: AboutFounder[] = [
 
 export const ABOUT_FOUNDERS_LABEL = "Founders \u00b7 JazzHQ";
 
-// Supplied black-and-white photo; its tilt, border and rounded corners are part of the asset.
+// Supplied black-and-white photo, straightened; its border and rounded corners are part of the asset.
 export const ABOUT_FOUNDERS_PHOTO = {
-  src: "/assets/about/founders/founders-krish-vijayraj.webp",
-  width: 2000,
-  height: 1181,
+  src: "/assets/about/founders/krish-vijayraj.webp",
+  width: 1949,
+  height: 1087,
   alt: "Krish Ramachandran and Vijayraj, the founders of JazzHQ, smiling side by side",
 };
 
@@ -207,7 +207,7 @@ export type BookSpread = { left: BookPage; right: BookPage };
 
 export const ABOUT_BOOK_COVER = {
   brand: "JAZZHQ",
-  title: ["FIELD", "NOTES"],
+  title: ["FOUNDER\u2019S", "NOTE"],
   volume: "VOL. 01",
   subtitle: ["WHY WE\u2019RE", "BUILDING THIS"],
 };

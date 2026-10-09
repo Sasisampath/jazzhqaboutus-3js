@@ -222,7 +222,7 @@
 }
 
 .au-story__title {
-  margin: 14px 0 0;
+  margin: 0;
   font-family: var(--au-font-display);
   font-size: clamp(34px, 5.4vw, 68px);
   font-weight: 700;
@@ -317,7 +317,7 @@
   flex-direction: column;
   margin-top: 0.9em;
   font-family: var(--au-font-display);
-  font-size: 3.9em;
+  font-size: 2.85em;
   font-weight: 700;
   line-height: 0.98;
   letter-spacing: -0.03em;
@@ -656,38 +656,12 @@
   margin: 28px auto 0;
 }
 
-/* The asset already carries a ~-2.9deg tilt, border and rounded corners;
-   ease it back to roughly -1deg. */
+/* The border and rounded corners are part of the asset. */
 .au-founders__photo {
   display: block;
   width: 100%;
   height: auto;
-  transform: rotate(1.8deg);
   filter: drop-shadow(0 14px 18px rgba(40, 30, 16, 0.16));
-}
-
-.au-founders__spark,
-.au-founders__scribble {
-  position: absolute;
-  z-index: 1;
-  stroke-width: 3;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  pointer-events: none;
-}
-
-.au-founders__spark {
-  top: -6px;
-  left: -34px;
-  width: 36px;
-  stroke: var(--au-purple);
-}
-
-.au-founders__scribble {
-  right: -58px;
-  bottom: 96px;
-  width: 84px;
-  stroke: var(--au-red);
 }
 
 .au-founders__list {
@@ -759,24 +733,12 @@
   .au-founders__frame {
     width: 88%;
   }
-
-  .au-founders__scribble {
-    display: none;
-  }
 }
 
 @media (max-width: 699px) {
   .au-founders__frame {
     width: 100%;
     margin-top: 20px;
-  }
-
-  .au-founders__photo {
-    transform: rotate(2.4deg);
-  }
-
-  .au-founders__spark {
-    display: none;
   }
 
   .au-founders__list {

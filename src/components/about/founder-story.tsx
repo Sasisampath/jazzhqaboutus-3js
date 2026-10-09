@@ -7,7 +7,6 @@ export function FounderStory() {
     <section className="au-story" aria-labelledby="au-story-title">
       <div className="page-section au-story__inner">
         <header className="au-story__head">
-          <p className="au-eyebrow">A note from the founders</p>
           <h1 id="au-story-title" className="au-story__title">
             Why we are building JazzHQ
           </h1>

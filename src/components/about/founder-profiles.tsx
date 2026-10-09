@@ -14,10 +14,6 @@ export function FounderProfiles() {
       </h2>
 
       <div className="au-founders__frame">
-        <svg className="au-founders__spark" viewBox="0 0 40 36" fill="none" aria-hidden>
-          <path d="M3 30 14 33M9 16l9 9M26 3l3 13" />
-        </svg>
-
         <Image
           src={ABOUT_FOUNDERS_PHOTO.src}
           alt={ABOUT_FOUNDERS_PHOTO.alt}
@@ -26,10 +22,6 @@ export function FounderProfiles() {
           sizes="(max-width: 699px) 100vw, (max-width: 1400px) 76vw, 960px"
           className="au-founders__photo"
         />
-
-        <svg className="au-founders__scribble" viewBox="0 0 96 64" fill="none" aria-hidden>
-          <path d="M4 60C30 44 62 22 88 8c6-3 5 5 0 10-9 9-26 20-38 22-7 1-6-6 2-11 9-6 22-11 34-13" />
-        </svg>
 
         <ul className="au-founders__list" role="list">
           {ABOUT_FOUNDERS.map((founder) => (

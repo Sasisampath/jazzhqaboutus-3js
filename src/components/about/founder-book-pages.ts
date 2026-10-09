@@ -444,10 +444,17 @@ export function paintCover(canvas: HTMLCanvasElement, fonts: BookFonts) {
   setSpacing(ctx, 9);
   ctx.fillText(ABOUT_BOOK_COVER.brand, left, 182);
 
-  ctx.font = `700 176px ${fonts.display}`;
-  setSpacing(ctx, -5);
+  // Title: as large as the cover allows (capped), so longer titles never clip.
+  ctx.font = `700 100px ${fonts.display}`;
+  setSpacing(ctx, -3);
+  const widest = Math.max(
+    ...ABOUT_BOOK_COVER.title.map((line) => ctx.measureText(line).width),
+  );
+  const titleSize = Math.min(176, (100 * (w - left - 96)) / widest);
+  ctx.font = `700 ${titleSize}px ${fonts.display}`;
+  setSpacing(ctx, -titleSize * 0.03);
   ABOUT_BOOK_COVER.title.forEach((line, i) => {
-    ctx.fillText(line, left - 8, 470 + i * 172);
+    ctx.fillText(line, left - titleSize * 0.045, 642 - (ABOUT_BOOK_COVER.title.length - 1 - i) * titleSize * 0.98);
   });
 
   ctx.font = `500 26px ${fonts.mono}`;
