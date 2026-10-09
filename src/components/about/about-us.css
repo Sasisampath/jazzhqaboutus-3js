@@ -1049,8 +1049,10 @@
 
 /* Large closing image */
 
+/* Sized for a 4:3 photo; the label stays aligned with the image edge. */
 .au-final {
-  margin: clamp(8px, 2vw, 24px) 0 0;
+  max-width: 920px;
+  margin: clamp(8px, 2vw, 24px) auto 0;
 }
 
 .au-final__label {
@@ -1074,11 +1076,13 @@
   background: var(--au-green);
 }
 
+/* Shown whole, never cropped. */
 .au-final__image {
   display: block;
   width: 100%;
   height: auto;
   border-radius: 20px;
+  object-fit: contain;
 }
 
 .au-final__pending {

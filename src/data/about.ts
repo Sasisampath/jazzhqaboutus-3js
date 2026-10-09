@@ -125,10 +125,10 @@ export type AboutFinalImage = {
 };
 
 export const ABOUT_FINAL_IMAGE: AboutFinalImage | null = {
-  src: "/assets/about/current-chapter-2026.jpg",
+  src: "/assets/about/current-chapter-team.jpg",
   width: 2000,
-  height: 1006,
-  alt: "Group photo of people gathered at a JazzHQ event, smiling in front of a red wall",
+  height: 1500,
+  alt: "The JazzHQ team in matching Jazz Club T-shirts, gathered in front of an orange wall",
 };
 
 export const ABOUT_FINAL_IMAGE_LABEL = "Current chapter · 2026";

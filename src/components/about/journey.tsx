@@ -19,7 +19,7 @@ function JourneyFinalImage() {
           alt={ABOUT_FINAL_IMAGE.alt}
           width={ABOUT_FINAL_IMAGE.width}
           height={ABOUT_FINAL_IMAGE.height}
-          sizes="(max-width: 1400px) 100vw, 1400px"
+          sizes="(max-width: 1000px) 100vw, 920px"
           className="au-final__image"
         />
       ) : (
