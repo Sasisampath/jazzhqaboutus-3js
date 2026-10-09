@@ -388,7 +388,7 @@ export function FounderBook() {
             className="au-book__btn au-book__btn--primary"
             onClick={openBook}
           >
-            Read more <span aria-hidden>→</span>
+            Read the note <span aria-hidden>→</span>
           </button>
         )}
       </div>
