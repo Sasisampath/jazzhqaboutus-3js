@@ -1,0 +1,46 @@
+/* Black footer, ending with the full white JAZZ·HQ wordmark. */
+.site-footer { background: var(--footer-bg, #0a090b); color: #fff; }
+.site-footer__inner { max-width: var(--max-content, 1400px); margin-inline: auto; padding: 36px var(--page-padding, 24px) 0; }
+.site-footer__main { display: grid; grid-template-columns: minmax(0, 1.5fr) auto minmax(0, 1.35fr); gap: clamp(32px, 4vw, 64px); align-items: start; }
+
+.site-footer__logo img { display: block; width: auto; height: 26px; }
+.site-footer__follow { margin-top: 16px; font-size: 15px; color: #fff; }
+.site-footer__social { display: flex; align-items: center; gap: 14px; margin-top: 10px; }
+.site-footer__social a { display: block; transition: opacity .2s; }
+.site-footer__social a:hover { opacity: .7; }
+.site-footer__social img { display: block; width: 22px; height: 22px; }
+.site-footer__marks { display: flex; gap: 14px; margin: 22px 0 0; padding: 0; list-style: none; }
+.site-footer__marks li { width: 60px; height: 60px; overflow: hidden; border-radius: 50%; background: #fff; }
+.site-footer__marks img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.site-footer__address { margin-top: 16px; font-size: 14px; font-style: normal; line-height: 1.5; color: rgb(255 255 255 / .82); }
+
+.site-footer__nav { display: flex; gap: clamp(32px, 5vw, 72px); }
+.site-footer__title { font-size: 17px; font-weight: 600; line-height: 1.4; color: #fff; }
+.site-footer__col ul { display: grid; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; }
+.site-footer__link { font-size: 15px; line-height: 1.5; color: rgb(255 255 255 / .72); cursor: pointer; transition: color .2s; }
+.site-footer__link:hover { color: #fff; }
+
+.site-footer__ai { padding-left: clamp(24px, 3.4vw, 52px); border-left: 1px solid rgb(255 255 255 / .12); }
+
+.site-footer__ai-logos { display: flex; flex-wrap: wrap; align-items: center; gap: 20px clamp(32px, 3.4vw, 48px); margin-top: 22px; }
+.site-footer__ai-logo { display: block; padding: 4px; opacity: .72; cursor: pointer; transition: opacity .2s, transform .2s; }
+.site-footer__ai-logo:hover, .site-footer__ai-logo:focus-visible { opacity: 1; transform: translateY(-2px); }
+.site-footer__ai-logo img { display: block; width: auto; height: 30px; }
+
+.site-footer__bottom { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 24px; padding-block: 18px; border-top: 1px solid rgb(255 255 255 / .12); font-size: 14px; color: rgb(255 255 255 / .72); }
+.site-footer__legal { display: flex; align-items: center; }
+.site-footer__legal .site-footer__link { font-size: 14px; }
+.site-footer__legal .site-footer__link + .site-footer__link { margin-left: 20px; padding-left: 20px; border-left: 1px solid rgb(255 255 255 / .25); }
+
+/* Full logo, never cropped: it scales with the container and keeps its own ratio. */
+.site-footer__wordmark { display: block; width: 80%; height: auto; margin-inline: auto; padding-block: clamp(28px, 3.6vw, 52px) clamp(24px, 2.6vw, 36px); }
+
+@media (max-width: 1023px) {
+  .site-footer__main { grid-template-columns: minmax(0, 1fr) auto; }
+  .site-footer__ai { grid-column: 1 / -1; padding: 24px 0 0; border-left: 0; border-top: 1px solid rgb(255 255 255 / .12); }
+}
+@media (max-width: 639px) {
+  .site-footer__main { grid-template-columns: minmax(0, 1fr); }
+  .site-footer__nav { gap: 48px; }
+  .site-footer__bottom { flex-direction: column; align-items: flex-start; }
+}
