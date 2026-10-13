@@ -7,7 +7,8 @@ import {
 } from "@/data/about";
 
 /* Flat, DOM-only rendering of the founder note. Used as the poster while the
-   3D book loads, as the WebGL fallback, and as the screen-reader transcript. */
+   3D book loads, as the static version (reduced motion / no WebGL), and as the
+   screen-reader transcript. */
 
 function Runs({ runs }: { runs: BookRun[] }) {
   return (
@@ -109,24 +110,15 @@ export function FounderBookCover() {
   );
 }
 
-export function FounderBookSpread({
-  spread,
-  side,
-  single,
-}: {
-  spread: number;
-  side: 0 | 1;
-  single: boolean;
-}) {
+/** One spread as flat pages. `stack` puts the two pages under each other (narrow screens). */
+export function FounderBookSpread({ spread, stack }: { spread: number; stack: boolean }) {
   const pages = ABOUT_BOOK_SPREADS[spread];
   return (
-    <div className={`au-flat-spread${single ? " au-flat-spread--single" : ""}`}>
-      {(!single || side === 0) && (
-        <FlatPage page={pages.left} side="left" folio={spread * 2 + 1} />
-      )}
-      {(!single || side === 1) && (
-        <FlatPage page={pages.right} side="right" folio={spread * 2 + 2} />
-      )}
+    <div
+      className={`au-flat-spread${stack ? " au-flat-spread--single au-flat-spread--stack" : ""}`}
+    >
+      <FlatPage page={pages.left} side="left" folio={spread * 2 + 1} />
+      <FlatPage page={pages.right} side="right" folio={spread * 2 + 2} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ABOUT_BOOK_SPREADS } from "@/data/about";
 import {
   FounderBookCover,
@@ -9,25 +9,18 @@ import {
 } from "./founder-book-fallback";
 import type { FounderBookScene } from "./founder-book-scene";
 
-const SPREADS = ABOUT_BOOK_SPREADS.length;
-const PAGES = SPREADS * 2;
+/* Scroll-driven founder note. The tall wrapper is the scroll track; the heading
+   and book stay sticky inside it, and the scroll position alone decides the
+   book's pose. Reduced motion / no WebGL get the note as flat, stacked spreads. */
+
 const SINGLE_PAGE_BELOW = 700;
-const DRAG_START = 8;
+const REDUCED_QUERY = "(prefers-reduced-motion: reduce)";
 
-type Mode = "poster" | "webgl" | "fallback";
-
-type Gesture = {
-  id: number;
-  x: number;
-  y: number;
-  width: number;
-  left: number;
-  leaf: number | null;
-  /** Leaf progress at drag start (0 = on the right, 1 = turned). */
-  base: number;
-  progress: number;
-  moved: boolean;
-};
+function subscribeReduced(onChange: () => void) {
+  const query = window.matchMedia(REDUCED_QUERY);
+  query.addEventListener("change", onChange);
+  return () => query.removeEventListener("change", onChange);
+}
 
 function hasWebGL() {
   try {
@@ -38,104 +31,92 @@ function hasWebGL() {
   }
 }
 
-export function FounderBook() {
+export function FounderBook({ heading }: { heading: React.ReactNode }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const hintRef = useRef<HTMLParagraphElement>(null);
+  const posterRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<FounderBookScene | null>(null);
-  const gestureRef = useRef<Gesture | null>(null);
-  const openRef = useRef<HTMLButtonElement>(null);
-  const nextRef = useRef<HTMLButtonElement>(null);
-  const prevRef = useRef<HTMLButtonElement>(null);
-  const focusAfter = useRef<"open" | "next" | null>(null);
 
-  const [mode, setMode] = useState<Mode>("poster");
-  const [opened, setOpened] = useState(false);
-  const [page, setPage] = useState(0); // 0…5, left/right pages of the three spreads
+  const reduced = useSyncExternalStore(
+    subscribeReduced,
+    () => window.matchMedia(REDUCED_QUERY).matches,
+    () => false,
+  );
+  const [webgl, setWebgl] = useState<"pending" | "ready" | "failed">("pending");
   const [single, setSingle] = useState(false);
-  const [reduced, setReduced] = useState(false);
-  const [hot, setHot] = useState(false);
 
-  const spread = Math.floor(page / 2);
-  const side = (page % 2) as 0 | 1;
-  const atStart = single ? page === 0 : spread === 0;
-  const atEnd = single ? page === PAGES - 1 : spread === SPREADS - 1;
+  const mode = reduced || webgl === "failed" ? "static" : webgl === "ready" ? "webgl" : "poster";
 
-  const openBook = useCallback(() => {
-    focusAfter.current = "next";
-    setPage(0);
-    setOpened(true);
-  }, []);
-
-  const closeBook = useCallback(() => {
-    focusAfter.current = "open";
-    setOpened(false);
-  }, []);
-
-  const goNext = useCallback(() => {
-    setPage((current) =>
-      single
-        ? Math.min(PAGES - 1, current + 1)
-        : Math.min(SPREADS - 1, Math.floor(current / 2) + 1) * 2,
-    );
-  }, [single]);
-
-  const goPrev = useCallback(() => {
-    setPage((current) =>
-      single ? Math.max(0, current - 1) : Math.max(0, Math.floor(current / 2) - 1) * 2,
-    );
-  }, [single]);
-
-  // Keep keyboard focus on a sensible control when the control set swaps.
+  // Narrow layouts show one page at a time.
   useEffect(() => {
-    if (focusAfter.current === "next") nextRef.current?.focus({ preventScroll: true });
-    if (focusAfter.current === "open") openRef.current?.focus({ preventScroll: true });
-    focusAfter.current = null;
-  }, [opened]);
-
-  useEffect(() => {
-    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setReduced(query.matches);
-    sync();
-    query.addEventListener("change", sync);
-    return () => query.removeEventListener("change", sync);
-  }, []);
-
-  // Stage size → single-page mode + renderer size.
-  useEffect(() => {
-    const stage = stageRef.current;
-    if (!stage) return;
+    const track = trackRef.current;
+    if (!track) return;
     const observer = new ResizeObserver(() => {
-      const { width, height } = stage.getBoundingClientRect();
-      setSingle(width < SINGLE_PAGE_BELOW);
-      sceneRef.current?.resize(width, height);
+      setSingle(track.getBoundingClientRect().width < SINGLE_PAGE_BELOW);
     });
-    observer.observe(stage);
+    observer.observe(track);
     return () => observer.disconnect();
   }, []);
 
-  // Lazily build the WebGL book once the stage is near the viewport,
-  // and stop rendering while it is off screen.
+  // Build the WebGL book lazily, then let scroll position drive it.
   useEffect(() => {
+    if (reduced) return;
+    const track = trackRef.current;
+    const sticky = stickyRef.current;
     const stage = stageRef.current;
     const canvas = canvasRef.current;
-    if (!stage || !canvas) return;
+    if (!track || !sticky || !stage || !canvas) return;
 
     let cancelled = false;
     let started = false;
+    let raf = 0;
+
+    // Normalised progress of the sticky block through its track (0…1).
+    const sync = () => {
+      raf = 0;
+      const range = track.offsetHeight - sticky.offsetHeight;
+      const top = parseFloat(getComputedStyle(sticky).top) || 0;
+      const progress =
+        range > 0
+          ? Math.min(1, Math.max(0, (top - track.getBoundingClientRect().top) / range))
+          : 0;
+      sceneRef.current?.setProgress(progress);
+      if (hintRef.current) {
+        hintRef.current.style.opacity = String(Math.max(0, 1 - progress / 0.04));
+      }
+      // The loading poster is a closed cover, so only show it while the book is closed.
+      if (posterRef.current) {
+        posterRef.current.style.opacity = progress < 0.1 ? "1" : "0";
+      }
+    };
+    const requestSync = () => {
+      if (!raf) raf = requestAnimationFrame(sync);
+    };
+
+    const fit = () => {
+      const { width, height } = stage.getBoundingClientRect();
+      const scene = sceneRef.current;
+      if (!scene) return;
+      scene.setSingle(track.getBoundingClientRect().width < SINGLE_PAGE_BELOW);
+      scene.resize(width, height);
+      requestSync();
+    };
 
     const start = async () => {
       if (!hasWebGL()) {
-        setMode("fallback");
+        setWebgl("failed");
         return;
       }
       try {
         const { createFounderBookScene } = await import("./founder-book-scene");
         const scene = await createFounderBookScene(canvas, {
-          reducedMotion: window.matchMedia("(prefers-reduced-motion: reduce)").matches,
           onContextLost: () => {
             sceneRef.current?.dispose();
             sceneRef.current = null;
-            setMode("fallback");
+            setWebgl("failed");
           },
         });
         if (cancelled) {
@@ -143,259 +124,76 @@ export function FounderBook() {
           return;
         }
         sceneRef.current = scene;
-        setMode("webgl");
+        // Pose for wherever the page already is (e.g. a refresh mid-way) before showing it.
+        fit();
+        sync();
+        setWebgl("ready");
       } catch {
-        if (!cancelled) setMode("fallback");
+        if (!cancelled) setWebgl("failed");
       }
     };
 
-    const observer = new IntersectionObserver(
+    const visibility = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && !started) {
           started = true;
           void start();
         }
         sceneRef.current?.setActive(entry.isIntersecting);
+        if (entry.isIntersecting) requestSync();
       },
       { rootMargin: "240px 0px" },
     );
-    observer.observe(stage);
+    visibility.observe(track);
+
+    const resize = new ResizeObserver(fit);
+    resize.observe(stage);
+
+    window.addEventListener("scroll", requestSync, { passive: true });
+    window.addEventListener("resize", requestSync);
 
     return () => {
       cancelled = true;
-      observer.disconnect();
+      if (raf) cancelAnimationFrame(raf);
+      visibility.disconnect();
+      resize.disconnect();
+      window.removeEventListener("scroll", requestSync);
+      window.removeEventListener("resize", requestSync);
       sceneRef.current?.dispose();
       sceneRef.current = null;
+      setWebgl("pending");
     };
-  }, []);
-
-  // Push React state into the scene.
-  useEffect(() => {
-    const scene = sceneRef.current;
-    const stage = stageRef.current;
-    if (mode !== "webgl" || !scene || !stage) return;
-    scene.setReducedMotion(reduced);
-    scene.setView({ opened, spread, side, single });
-    const { width, height } = stage.getBoundingClientRect();
-    scene.resize(width, height);
-  }, [mode, opened, spread, side, single, reduced]);
-
-  /* ── Pointer: hover, click, page drag, swipe ── */
-
-  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
-    const scene = sceneRef.current;
-    const gesture = gestureRef.current;
-
-    if (gesture && gesture.id === event.pointerId) {
-      const dx = event.clientX - gesture.x;
-      const dy = event.clientY - gesture.y;
-      if (!gesture.moved && Math.abs(dx) > DRAG_START && Math.abs(dx) > Math.abs(dy)) {
-        gesture.moved = true;
-        if (scene && opened && !single) {
-          const fromRight = gesture.x - gesture.left > gesture.width / 2;
-          if (fromRight && dx < 0 && spread < SPREADS - 1) {
-            gesture.leaf = spread + 1;
-            gesture.base = 0;
-          } else if (!fromRight && dx > 0 && spread > 0) {
-            gesture.leaf = spread;
-            gesture.base = 1;
-          }
-          if (gesture.leaf !== null) {
-            try {
-              event.currentTarget.setPointerCapture(event.pointerId);
-            } catch {
-              // Pointer already released; the drag still resolves on pointerup/cancel.
-            }
-          }
-        }
-      }
-      if (scene && gesture.leaf !== null) {
-        const travel = Math.abs(dx) / (gesture.width * 0.42);
-        gesture.progress = gesture.base === 0 ? Math.min(1, travel) : Math.max(0, 1 - travel);
-        scene.drag(gesture.leaf, gesture.progress);
-      }
-      return;
-    }
-
-    if (!scene || event.pointerType !== "mouse") return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    scene.setPointer(
-      ((event.clientX - rect.left) / rect.width) * 2 - 1,
-      ((event.clientY - rect.top) / rect.height) * 2 - 1,
-    );
-    if (!opened) {
-      const hit = scene.hitTest(event.clientX, event.clientY);
-      setHot(hit);
-      scene.setHover(hit);
-    }
-  };
-
-  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    gestureRef.current = {
-      id: event.pointerId,
-      x: event.clientX,
-      y: event.clientY,
-      width: rect.width,
-      left: rect.left,
-      leaf: null,
-      base: 0,
-      progress: 0,
-      moved: false,
-    };
-  };
-
-  const onPointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
-    const gesture = gestureRef.current;
-    gestureRef.current = null;
-    if (!gesture || gesture.id !== event.pointerId) return;
-    const scene = sceneRef.current;
-    const dx = event.clientX - gesture.x;
-
-    if (gesture.leaf !== null && scene) {
-      // Dragged leaf: commit past the midpoint, otherwise let it fall back.
-      const committed = gesture.base === 0 ? gesture.progress > 0.4 : gesture.progress < 0.6;
-      if (committed) {
-        if (gesture.base === 0) goNext();
-        else goPrev();
-      } else {
-        scene.endDrag(gesture.leaf);
-      }
-      return;
-    }
-
-    if (gesture.moved) {
-      // Horizontal swipe (single-page mode and the DOM fallback).
-      if (opened && Math.abs(dx) > 36) {
-        if (dx < 0) goNext();
-        else goPrev();
-      }
-      return;
-    }
-
-    if (!opened) {
-      const onBook =
-        mode !== "webgl" || !scene || scene.hitTest(event.clientX, event.clientY);
-      if (onBook) openBook();
-      return;
-    }
-    if (event.clientX - gesture.left > gesture.width * 0.5) goNext();
-    else goPrev();
-  };
-
-  const onPointerCancel = () => {
-    const gesture = gestureRef.current;
-    gestureRef.current = null;
-    if (gesture?.leaf != null) sceneRef.current?.endDrag(gesture.leaf);
-  };
-
-  const onPointerLeave = () => {
-    setHot(false);
-    sceneRef.current?.setHover(false);
-    sceneRef.current?.setPointer(0, 0);
-  };
-
-  const onKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Escape" && opened) {
-      event.preventDefault();
-      closeBook();
-    } else if (event.key === "ArrowRight") {
-      event.preventDefault();
-      if (opened) goNext();
-      else openBook();
-    } else if (event.key === "ArrowLeft" && opened) {
-      event.preventDefault();
-      goPrev();
-    }
-  };
-
-  const counter = single
-    ? `Page ${page + 1} of ${PAGES}`
-    : `Spread ${spread + 1} of ${SPREADS}`;
-  const counterShort = single
-    ? `${String(page + 1).padStart(2, "0")} / ${String(PAGES).padStart(2, "0")}`
-    : `${String(spread + 1).padStart(2, "0")} / ${String(SPREADS).padStart(2, "0")}`;
+  }, [reduced]);
 
   return (
-    <div
-      className="au-book"
-      role="group"
-      aria-roledescription="interactive notebook"
-      aria-label="Field notes from the JazzHQ founders"
-      onKeyDown={onKeyDown}
-    >
-      <div
-        ref={stageRef}
-        className={`au-book__stage au-book__stage--${mode}${opened ? " is-open" : ""}${
-          hot || mode !== "webgl" || opened ? " is-hot" : ""
-        }`}
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerCancel}
-        onPointerLeave={onPointerLeave}
-        aria-hidden
-      >
-        <canvas ref={canvasRef} className="au-book__canvas" />
-        {mode !== "webgl" && (
-          <div className="au-book__flat">
-            {opened ? (
-              <FounderBookSpread spread={spread} side={side} single={single} />
-            ) : (
-              <FounderBookCover />
-            )}
+    <div ref={trackRef} className={`au-book au-book--${mode}`}>
+      <div ref={stickyRef} className="au-book__sticky">
+        {heading}
+
+        {mode === "static" ? (
+          <div className="au-book__static" aria-hidden>
+            {ABOUT_BOOK_SPREADS.map((_, index) => (
+              <FounderBookSpread key={index} spread={index} stack={single} />
+            ))}
           </div>
+        ) : (
+          <>
+            <div ref={stageRef} className="au-book__stage" aria-hidden>
+              <canvas ref={canvasRef} className="au-book__canvas" />
+              {mode === "poster" && (
+                <div ref={posterRef} className="au-book__flat">
+                  <FounderBookCover />
+                </div>
+              )}
+            </div>
+            <p ref={hintRef} className="au-book__hint" aria-hidden>
+              Scroll to read <span>↓</span>
+            </p>
+          </>
         )}
       </div>
 
       <FounderBookTranscript />
-
-      <div className="au-book__controls">
-        {opened ? (
-          <>
-            <button
-              ref={prevRef}
-              type="button"
-              className="au-book__btn au-book__btn--icon"
-              onClick={goPrev}
-              disabled={atStart}
-              aria-label="Previous page"
-            >
-              <span aria-hidden>←</span>
-            </button>
-            <span className="au-book__counter" aria-hidden>
-              {counterShort}
-            </span>
-            <button
-              ref={nextRef}
-              type="button"
-              className="au-book__btn au-book__btn--icon"
-              onClick={goNext}
-              disabled={atEnd}
-              aria-label="Next page"
-            >
-              <span aria-hidden>→</span>
-            </button>
-            <button type="button" className="au-book__btn" onClick={closeBook}>
-              Close
-            </button>
-          </>
-        ) : (
-          <button
-            ref={openRef}
-            type="button"
-            className="au-book__btn au-book__btn--primary"
-            onClick={openBook}
-          >
-            Read the note <span aria-hidden>→</span>
-          </button>
-        )}
-      </div>
-
-      <p className="au-sr-only" role="status" aria-live="polite">
-        {opened ? `Notebook open. ${counter}.` : "Notebook closed."}
-      </p>
     </div>
   );
 }

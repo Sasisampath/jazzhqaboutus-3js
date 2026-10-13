@@ -8,25 +8,14 @@ import {
 } from "./founder-book-pages";
 
 /* One hardback field-notes book for the About Us founder note.
-   Transparent canvas, no post-processing, renders only while something moves. */
-
-export type FounderBookView = {
-  opened: boolean;
-  /** 0-based spread currently shown. */
-  spread: number;
-  /** Which page of the spread is centred in single-page (mobile) mode. */
-  side: 0 | 1;
-  single: boolean;
-};
+   Transparent canvas, no post-processing. The pose is a pure function of scroll
+   progress, and a frame is rendered only when that progress changes. */
 
 export type FounderBookScene = {
-  setView(view: FounderBookView): void;
-  setReducedMotion(reduced: boolean): void;
-  setHover(hover: boolean): void;
-  setPointer(x: number, y: number): void;
-  hitTest(clientX: number, clientY: number): boolean;
-  drag(leaf: number, progress: number): void;
-  endDrag(leaf: number): void;
+  /** Scroll progress 0…1. The same value always produces the same pose. */
+  setProgress(progress: number): void;
+  /** Single-page (mobile) mode: one page is centred at a time. */
+  setSingle(single: boolean): void;
   resize(width: number, height: number): void;
   setActive(active: boolean): void;
   dispose(): void;
@@ -47,11 +36,7 @@ const BLOCK_TOP = T / 2 - (TURNING + 1.5) * SHEET;
 const SEGMENTS = 22;
 const FOV = 28;
 const OPEN_ANGLE = Math.PI * 0.994;
-const HOVER_ANGLE = THREE.MathUtils.degToRad(7);
 
-type Channel = { value: number; from: number; to: number; start: number; dur: number };
-
-const channel = (value: number): Channel => ({ value, from: value, to: value, start: 0, dur: 0 });
 const ease = (t: number) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
 const lerp = THREE.MathUtils.lerp;
 
@@ -116,7 +101,7 @@ function shadowTexture() {
 
 export async function createFounderBookScene(
   canvas: HTMLCanvasElement,
-  options: { reducedMotion: boolean; onContextLost: () => void },
+  options: { onContextLost: () => void },
 ): Promise<FounderBookScene> {
   const fonts = await resolveBookFonts();
 
@@ -288,95 +273,70 @@ export async function createFounderBookScene(
   shadow.renderOrder = -1;
   rig.add(shadow);
 
-  /* ── Animation state ── */
-  const open = channel(0);
-  const cover = channel(0);
-  const hover = channel(0);
-  const pan = channel(0);
-  const leafCh = leaves.slice(0, TURNING).map(() => channel(0));
-  const leafDir = leafCh.map(() => 1);
-  const channels = [open, cover, hover, pan, ...leafCh];
+  /* ── Scroll-driven pose ── */
 
-  let reduced = options.reducedMotion;
-  let view: FounderBookView = { opened: false, spread: 0, side: 0, single: false };
+  type Pose = { open: number; cover: number; leaves: number[]; pan: number };
+
+  const clamp01 = (v: number) => THREE.MathUtils.clamp(v, 0, 1);
+  // Eased 0→1 across [a, b]; flat outside it, which is what creates the reading holds.
+  const span = (p: number, a: number, b: number) => ease(clamp01((p - a) / (b - a)));
+
+  const poseAt = (p: number): Pose => {
+    if (!single) {
+      // closed · open · read 01 · turn · read 02 · turn · read 03
+      return {
+        open: span(p, 0.15, 0.35),
+        cover: span(p, 0.15, 0.33),
+        leaves: [span(p, 0.19, 0.35), span(p, 0.5, 0.65), span(p, 0.78, 0.9)],
+        pan: 0,
+      };
+    }
+    // One page at a time: slide left→right within a spread, turn to the next.
+    const side =
+      span(p, 0.3, 0.36) -
+      span(p, 0.46, 0.56) +
+      span(p, 0.64, 0.7) -
+      span(p, 0.78, 0.88) +
+      span(p, 0.92, 0.96);
+    return {
+      open: span(p, 0.06, 0.2),
+      cover: span(p, 0.06, 0.19),
+      leaves: [span(p, 0.09, 0.2), span(p, 0.46, 0.56), span(p, 0.78, 0.88)],
+      pan: lerp(PAGE_W / 2, -PAGE_W / 2, side),
+    };
+  };
+
+  let single = false;
+  let progress = 0;
   let closedZ = -1;
-  let pointerX = 0;
-  let pointerY = 0;
-  let targetX = 0;
-  let targetY = 0;
   let active = true;
   let disposed = false;
   let raf = 0;
-  let last = 0;
 
-  const go = (ch: Channel, to: number, dur: number, delay = 0) => {
-    if (ch.to === to) return;
-    if (reduced) {
-      ch.value = ch.from = ch.to = to;
-      ch.dur = 0;
-      return;
-    }
-    ch.from = ch.value;
-    ch.to = to;
-    ch.start = performance.now() + delay;
-    ch.dur = dur;
-  };
+  const applyPose = () => {
+    const pose = poseAt(progress);
+    const o = pose.open;
 
-  const leafTarget = (i: number) => (view.opened && i <= view.spread ? 1 : 0);
-
-  const update = (now: number) => {
-    const dt = Math.min(0.05, last ? (now - last) / 1000 : 0.016);
-    last = now;
-    let moving = false;
-
-    channels.forEach((ch) => {
-      if (ch.value === ch.to) return;
-      if (ch.dur <= 0) {
-        ch.value = ch.to;
-        return;
-      }
-      const t = THREE.MathUtils.clamp((now - ch.start) / ch.dur, 0, 1);
-      ch.value = t >= 1 ? ch.to : ch.from + (ch.to - ch.from) * ease(t);
-      if (t < 1) moving = true;
-    });
-
-    const k = reduced ? 1 : Math.min(1, dt * 6);
-    pointerX += (targetX - pointerX) * k;
-    pointerY += (targetY - pointerY) * k;
-    if (Math.abs(targetX - pointerX) + Math.abs(targetY - pointerY) > 0.002) moving = true;
-
-    const o = open.value;
-    const parallax = 1 - o * 0.6;
     rig.position.z = lerp(closedZ, 0, o);
-    rig.rotation.set(
-      lerp(-0.4, -0.08, o) + pointerY * 0.05 * parallax,
-      lerp(-0.5, 0, o) + pointerX * 0.07 * parallax,
-      lerp(0.07, 0, o),
-    );
-    book.position.x = lerp(-W / 2, view.single ? pan.value : 0, o);
+    rig.rotation.set(lerp(-0.4, -0.08, o), lerp(-0.5, 0, o), lerp(0.07, 0, o));
+    book.position.x = lerp(-W / 2, pose.pan, o);
 
-    coverPivot.rotation.y = -lerp(hover.value * HOVER_ANGLE, OPEN_ANGLE, cover.value);
-    leaves.forEach((leaf, i) => {
-      shapeLeaf(leaf, i < TURNING ? leafCh[i].value : 0, i < TURNING ? leafDir[i] : 0);
-    });
+    coverPivot.rotation.y = -OPEN_ANGLE * pose.cover;
+    leaves.forEach((leaf, i) => shapeLeaf(leaf, i < TURNING ? pose.leaves[i] : 0, 1));
 
     // The texture's solid core is ~60% of the plane, so scale past the book.
-    shadow.scale.set(lerp(W * 1.74, W * 3.44, cover.value), H * 1.74, 1);
-    shadow.position.x = lerp(0.06, view.single ? pan.value : 0, o);
+    shadow.scale.set(lerp(W * 1.74, W * 3.44, pose.cover), H * 1.74, 1);
+    shadow.position.x = lerp(0.06, pose.pan, o);
     shadow.position.y = -0.09;
     // A single page fills the canvas, so the shadow would only show as a clipped box.
-    shadowMaterial.opacity = view.single ? 0.5 * (1 - o) : 0.5;
-
-    return moving;
+    shadowMaterial.opacity = single ? 0.5 * (1 - o) : 0.5;
   };
 
-  const frame = (now: number) => {
+  const frame = () => {
     raf = 0;
     if (disposed) return;
-    const moving = update(now);
+    applyPose();
     renderer.render(scene, camera);
-    if (moving && active) raf = requestAnimationFrame(frame);
-    else last = 0;
   };
 
   const invalidate = () => {
@@ -389,83 +349,16 @@ export async function createFounderBookScene(
   };
   canvas.addEventListener("webglcontextlost", onLost);
 
-  const raycaster = new THREE.Raycaster();
-  const ndc = new THREE.Vector2();
-
   return {
-    setView(next) {
-      const wasOpened = view.opened;
-      view = next;
-      if (next.opened) {
-        go(hover, 0, 200);
-        go(open, 1, 900);
-        go(cover, 1, 1000, wasOpened ? 0 : 60);
-        leafCh.forEach((ch, i) => {
-          const to = leafTarget(i);
-          if (ch.to !== to) leafDir[i] = to > ch.value ? 1 : -1;
-          go(ch, to, 850, wasOpened ? 0 : 200 + i * 90);
-        });
-        go(pan, next.side === 0 ? PAGE_W / 2 : -PAGE_W / 2, 650);
-      } else {
-        leafCh.forEach((ch, i) => {
-          if (ch.to !== 0) leafDir[i] = -1;
-          go(ch, 0, 520, (TURNING - 1 - i) * 50);
-        });
-        go(cover, 0, 820, 160);
-        go(open, 0, 900, 160);
-      }
+    setProgress(value) {
+      const next = clamp01(value);
+      if (next === progress) return;
+      progress = next;
       invalidate();
     },
-    setReducedMotion(value) {
-      reduced = value;
-      if (reduced) {
-        targetX = 0;
-        targetY = 0;
-        channels.forEach((ch) => {
-          ch.value = ch.from = ch.to;
-          ch.dur = 0;
-        });
-        invalidate();
-      }
-    },
-    setHover(value) {
-      if (view.opened || reduced) return;
-      go(hover, value ? 1 : 0, 320);
-      invalidate();
-    },
-    setPointer(x, y) {
-      if (reduced) return;
-      targetX = x;
-      targetY = y;
-      invalidate();
-    },
-    hitTest(clientX, clientY) {
-      const rect = canvas.getBoundingClientRect();
-      if (!rect.width || !rect.height) return false;
-      ndc.set(
-        ((clientX - rect.left) / rect.width) * 2 - 1,
-        -((clientY - rect.top) / rect.height) * 2 + 1,
-      );
-      raycaster.setFromCamera(ndc, camera);
-      return raycaster.intersectObjects([front, back, block], false).length > 0;
-    },
-    drag(i, progress) {
-      const ch = leafCh[i];
-      if (!ch) return;
-      const p = THREE.MathUtils.clamp(progress, 0, 1);
-      if (p !== ch.value) leafDir[i] = p > ch.value ? 1 : -1;
-      ch.value = ch.from = ch.to = p;
-      ch.dur = 0;
-      invalidate();
-    },
-    endDrag(i) {
-      const ch = leafCh[i];
-      if (!ch) return;
-      const to = leafTarget(i);
-      // Force a tween even when the leaf sits exactly on a previous target.
-      ch.to = Number.NaN;
-      leafDir[i] = to > ch.value ? 1 : -1;
-      go(ch, to, reduced ? 0 : 420);
+    setSingle(value) {
+      if (value === single) return;
+      single = value;
       invalidate();
     },
     resize(width, height) {
@@ -476,9 +369,9 @@ export async function createFounderBookScene(
       const tan = Math.tan(THREE.MathUtils.degToRad(FOV / 2));
       const fit = (halfW: number, halfH: number) =>
         Math.max(halfH / tan, halfW / (tan * camera.aspect));
-      const openDistance = view.single
+      const openDistance = single
         ? fit(PAGE_W / 2 + 0.07, H / 2 + OVERHANG + 0.1)
-        : fit(W + OVERHANG + 0.14, H / 2 + OVERHANG + 0.16);
+        : fit(W + OVERHANG + 0.14, H / 2 + OVERHANG + 0.24);
       const closedDistance = fit(W * 0.74, H * 0.64) * 1.2;
       camera.position.set(0, 0, openDistance);
       camera.updateProjectionMatrix();
@@ -491,7 +384,6 @@ export async function createFounderBookScene(
       else if (raf) {
         cancelAnimationFrame(raf);
         raf = 0;
-        last = 0;
       }
     },
     dispose() {

@@ -214,10 +214,12 @@
 /* ── Founder story ──────────────────────────────────────────── */
 
 .au-story {
-  padding-block: clamp(48px, 7vw, 88px) clamp(56px, 7vw, 96px);
+  padding-bottom: clamp(56px, 7vw, 96px);
 }
 
 .au-story__head {
+  flex-shrink: 0;
+  padding-top: clamp(20px, 4.5vh, 52px);
   text-align: center;
 }
 
@@ -232,24 +234,28 @@
   text-wrap: balance;
 }
 
-/* Book */
+/* Book — the tall wrapper is the scroll track; heading + book stay sticky in it. */
 
 .au-book {
-  margin-top: clamp(8px, 2vw, 24px);
+  --au-header-h: 72px;
+  position: relative;
+  height: 320vh;
+}
+
+.au-book__sticky {
+  position: sticky;
+  top: var(--au-header-h);
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--au-header-h));
+  height: calc(100svh - var(--au-header-h));
 }
 
 .au-book__stage {
   position: relative;
+  flex: 1;
   width: 100%;
-  height: clamp(440px, 50vw, 660px);
-  touch-action: pan-y;
-  user-select: none;
-  -webkit-user-select: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.au-book__stage.is-hot {
-  cursor: pointer;
+  min-height: 0;
 }
 
 .au-book__canvas {
@@ -259,10 +265,10 @@
   width: 100%;
   height: 100%;
   opacity: 0;
-  transition: opacity 0.5s ease;
+  transition: opacity 0.4s ease;
 }
 
-.au-book__stage--webgl .au-book__canvas {
+.au-book--webgl .au-book__canvas {
   opacity: 1;
 }
 
@@ -275,12 +281,66 @@
   padding-block: 28px;
 }
 
+.au-book__hint {
+  flex-shrink: 0;
+  margin: 0;
+  padding-block: 6px 18px;
+  font-family: var(--au-font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--au-muted);
+  pointer-events: none;
+}
+
 @media (max-width: 699px) {
-  .au-book__stage {
-    height: auto;
-    aspect-ratio: 0.74;
-    max-height: 560px;
+  .au-book {
+    height: 260vh;
+    height: 260svh;
   }
+}
+
+/* Static version (reduced motion or no WebGL): no scroll track, every spread shown. */
+
+.au-book--static {
+  height: auto;
+}
+
+.au-book--static .au-book__sticky {
+  position: static;
+  height: auto;
+}
+
+.au-book__static {
+  display: grid;
+  gap: 24px;
+  justify-items: center;
+  margin-top: clamp(24px, 4vw, 48px);
+}
+
+/* Pages grow with their text here rather than holding the book's fixed ratio. */
+.au-book__static .au-flat-spread {
+  width: min(100%, 920px);
+  height: auto;
+  aspect-ratio: auto;
+}
+
+.au-book__static .au-flat-page {
+  min-height: 68cqw;
+}
+
+.au-book__static .au-flat-spread:not(.au-flat-spread--stack) .au-note-display--md {
+  font-size: 4.3cqw;
+}
+
+.au-book__static .au-flat-spread--stack .au-flat-page {
+  min-height: 108cqw;
+}
+
+.au-book__static .au-flat-spread--stack .au-flat-page + .au-flat-page {
+  border-top: 1px solid #ddd6c6;
 }
 
 /* Flat cover (poster + fallback) */
@@ -384,7 +444,6 @@
   background: var(--au-paper);
   box-shadow: 0 18px 30px -20px rgba(40, 30, 16, 0.5);
   container-type: inline-size;
-  cursor: pointer;
 }
 
 .au-flat-spread--single {
@@ -552,73 +611,6 @@
 
 .au-flat-spread--single .au-note-rule {
   width: 9cqw;
-}
-
-/* Controls */
-
-.au-book__controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 48px;
-  margin-top: 8px;
-}
-
-.au-book__btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  min-width: 48px;
-  height: 48px;
-  padding: 0 20px;
-  border: 1px solid rgba(36, 36, 36, 0.22);
-  border-radius: 999px;
-  background: #fff;
-  font-family: var(--au-font-body);
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--au-ink);
-  cursor: pointer;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
-}
-
-.au-book__btn:hover:not(:disabled) {
-  border-color: var(--au-ink);
-}
-
-.au-book__btn:disabled {
-  opacity: 0.35;
-  cursor: default;
-}
-
-.au-book__btn--icon {
-  width: 48px;
-  padding: 0;
-  font-size: 18px;
-}
-
-.au-book__btn--primary {
-  border-color: var(--au-ink);
-  background: var(--au-ink);
-  color: #fff;
-}
-
-.au-book__btn--primary:hover:not(:disabled) {
-  background: #000;
-}
-
-.au-book__counter {
-  min-width: 84px;
-  font-family: var(--au-font-mono);
-  font-size: 13px;
-  letter-spacing: 0.12em;
-  text-align: center;
-  color: var(--au-muted);
 }
 
 /* Founders — the close of the same story */
@@ -1114,10 +1106,28 @@
 
 @media (prefers-reduced-motion: reduce) {
   .au-book__canvas,
-  .au-book__btn,
   .au-founder__link span,
   .au-header__btn {
     transition: none;
+  }
+
+  /* Before the script switches to the static note, don't reserve the scroll track. */
+  .au-book {
+    height: auto;
+  }
+
+  .au-book__sticky {
+    position: static;
+    height: auto;
+  }
+
+  .au-book__stage {
+    flex: none;
+    height: 440px;
+  }
+
+  .au-book__hint {
+    display: none;
   }
 
   .au-page .au-backed__logos .marquee-track {

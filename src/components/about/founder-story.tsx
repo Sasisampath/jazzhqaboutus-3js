@@ -6,13 +6,15 @@ export function FounderStory() {
   return (
     <section className="au-story" aria-labelledby="au-story-title">
       <div className="page-section au-story__inner">
-        <header className="au-story__head">
-          <h1 id="au-story-title" className="au-story__title">
-            Why we are building JazzHQ
-          </h1>
-        </header>
-
-        <FounderBook />
+        <FounderBook
+          heading={
+            <header className="au-story__head">
+              <h1 id="au-story-title" className="au-story__title">
+                Why we are building JazzHQ
+              </h1>
+            </header>
+          }
+        />
         <FounderProfiles />
       </div>
     </section>
