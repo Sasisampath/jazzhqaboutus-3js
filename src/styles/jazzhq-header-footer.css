@@ -1,0 +1,25 @@
+/* Design tokens + minimal resets the JazzHQ header and footer rely on.
+   Copied from the homepage's src/app/globals.css. Import once, e.g. in app/layout.tsx:
+   import "@/styles/jazzhq-header-footer.css";
+   Skip any token your project already defines with the same value. */
+:root {
+  --color-buyer: #14AE5D;
+  --color-vendor: #564EF0;
+  --color-partner: #E5484D;
+  --color-text-primary: #242424;
+  --color-text-secondary: #6A7077;
+  --stroke: #e6e8ea;
+  --footer-bg: #0a090b;
+  --max-content: 1400px;
+  --page-padding: 70px;
+}
+@media (max-width: 639px) { :root { --page-padding: 16px; } }
+@media (min-width: 640px) and (max-width: 1023px) { :root { --page-padding: 24px; } }
+@media (min-width: 1024px) and (max-width: 1279px) { :root { --page-padding: 48px; } }
+
+/* Zero-specificity resets (Tailwind's preflight already does this; harmless if present). */
+:where(.site-header, .site-footer) :where(*, *::before, *::after) { box-sizing: border-box; }
+:where(.site-header, .site-footer) :where(button) { margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+:where(.site-header, .site-footer) :where(p, ul, address) { margin: 0; }
+:where(.site-header, .site-footer) :where(a) { color: inherit; text-decoration: none; }
+:where(.site-header, .site-footer) :where(img, svg) { display: block; max-width: 100%; }

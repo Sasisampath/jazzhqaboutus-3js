@@ -4,8 +4,7 @@
    component and is not redefined here.
    ════════════════════════════════════════════════════════════ */
 
-.au-page,
-.au-header {
+.au-page {
   --au-ink: #242424;
   --au-muted: #6a7077;
   --au-purple: #564ef0;
@@ -51,136 +50,9 @@
   color: var(--au-muted);
 }
 
-.au-page :focus-visible,
-.au-header :focus-visible {
+.au-page :focus-visible {
   outline: 2px solid var(--au-purple);
   outline-offset: 3px;
-}
-
-/* ── Header ─────────────────────────────────────────────────── */
-
-.au-header {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  border-bottom: 1px solid var(--au-line);
-  background: #fff;
-}
-
-.au-header__inner {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  height: 72px;
-  max-width: 1400px;
-  margin-inline: auto;
-  padding-inline: 24px;
-}
-
-.au-header__logo {
-  flex-shrink: 0;
-  border-radius: 6px;
-}
-
-.au-header__logo img {
-  display: block;
-  width: auto;
-  height: 32px;
-}
-
-.au-header__here {
-  position: absolute;
-  left: 50%;
-  display: none;
-  margin: 0;
-  transform: translateX(-50%);
-  font-family: var(--au-font-mono);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--au-muted);
-}
-
-.au-header__cta {
-  display: none;
-  align-items: center;
-  gap: 12px;
-}
-
-.au-header__btn {
-  border-radius: 12px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 20px;
-  color: #fff;
-  text-align: center;
-  transition: background-color 0.2s ease;
-}
-
-.au-header__btn--purple {
-  background: #5048e5;
-}
-
-.au-header__btn--purple:hover {
-  background: #4039d4;
-}
-
-.au-header__btn--red {
-  background: #e84545;
-}
-
-.au-header__btn--red:hover {
-  background: #d43838;
-}
-
-.au-header__toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  border: 1px solid var(--au-line);
-  border-radius: 10px;
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.au-header__menu {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 16px 24px;
-  border-top: 1px solid var(--au-line);
-}
-
-.au-header__menu .au-header__btn {
-  padding-block: 12px;
-}
-
-@media (min-width: 768px) {
-  .au-header__cta {
-    display: flex;
-  }
-
-  .au-header__toggle,
-  .au-header__menu {
-    display: none;
-  }
-}
-
-@media (min-width: 1024px) {
-  .au-header__inner {
-    padding-inline: 64px;
-  }
-
-  .au-header__here {
-    display: block;
-  }
 }
 
 /* ── Section heads ──────────────────────────────────────────── */
@@ -1106,8 +978,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .au-book__canvas,
-  .au-founder__link span,
-  .au-header__btn {
+  .au-founder__link span {
     transition: none;
   }
 

@@ -10,6 +10,7 @@ import {
   SITE_URL,
 } from "@/lib/seo";
 import "./globals.css";
+import "@/styles/jazzhq-header-footer.css";
 
 const inter = Inter({
   variable: "--font-inter",

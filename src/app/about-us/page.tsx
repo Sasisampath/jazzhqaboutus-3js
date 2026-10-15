@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { GridBackground } from "@/components/layout/grid-background";
 import { TopBanner } from "@/components/layout/top-banner";
-import { AboutHeader } from "@/components/about/about-header";
-import { Footer } from "@/components/shared/footer";
+import { Header } from "@/components/layout/header";
+import Footer from "@/components/shared/footer";
 import { FounderStory } from "@/components/about/founder-story";
 import { BackedBy } from "@/components/about/backed-by";
 import { Journey } from "@/components/about/journey";
@@ -20,7 +20,7 @@ export default function AboutPage() {
   return (
     <GridBackground>
       <TopBanner />
-      <AboutHeader />
+      <Header />
       <main className="au-page flex-1">
         <FounderStory />
         <BackedBy />

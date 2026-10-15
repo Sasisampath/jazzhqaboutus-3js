@@ -1,0 +1,50 @@
+/* Site navbar: logo · centred nav · single "Get started" dropdown. */
+.site-header { position: sticky; top: 0; z-index: 50; border-bottom: 1px solid var(--stroke); background: #fff; }
+.site-header__inner { position: relative; display: flex; align-items: center; justify-content: space-between; height: 72px; max-width: var(--max-content); margin-inline: auto; padding-inline: var(--page-padding); }
+.site-header__logo { flex-shrink: 0; }
+.site-header__logo img { display: block; width: auto; height: 32px; }
+
+.site-header__nav { position: absolute; left: 50%; display: flex; align-items: center; gap: 36px; transform: translateX(-50%); }
+.site-header__link { font-size: 15px; font-weight: 500; line-height: 1.4; color: var(--color-text-primary); cursor: pointer; transition: opacity .2s; }
+.site-header__link:hover { opacity: .62; }
+
+.site-header__cta { position: relative; }
+.site-getstarted { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 10px 18px 10px 20px; border-radius: 10px; background: var(--color-text-primary); color: #fff; font-size: 15px; font-weight: 500; cursor: pointer; transition: opacity .2s; }
+.site-getstarted:hover { opacity: .9; }
+.site-getstarted__chevron { transition: transform .25s ease; }
+.site-getstarted[aria-expanded="true"] .site-getstarted__chevron { transform: rotate(180deg); }
+
+/* Absolutely positioned, so opening it never shifts the layout. */
+.site-getstarted-menu { position: absolute; top: calc(100% + 12px); right: 0; width: min(440px, calc(100vw - 2 * var(--page-padding))); padding: 24px 24px 12px; border: 1px solid var(--stroke); border-radius: 18px; background: #fff; box-shadow: 0 2px 6px rgb(16 24 40 / .04), 0 24px 56px -16px rgb(16 24 40 / .2); animation: site-menu-in .18s ease-out both; }
+.site-getstarted-menu__title { font-size: 20px; font-weight: 600; line-height: 1.3; letter-spacing: -.02em; color: var(--color-text-primary); }
+.site-getstarted-menu__sub { margin-top: 4px; font-size: 15px; line-height: 1.5; color: var(--color-text-secondary); }
+.site-getstarted-menu__rows { margin-top: 12px; }
+
+.site-journey { position: relative; display: flex; align-items: center; gap: 16px; width: calc(100% + 24px); margin-inline: -12px; padding: 14px 12px; border-radius: 12px; text-align: left; cursor: pointer; transition: background-color .2s; }
+.site-journey + .site-journey::before { content: ""; position: absolute; top: 0; left: 12px; right: 12px; height: 1px; background: var(--stroke); }
+.site-journey:hover, .site-journey:focus-visible { background: color-mix(in srgb, var(--color-text-primary) 4%, #fff); }
+.site-journey:focus-visible { outline: 2px solid var(--color-text-primary); outline-offset: -2px; }
+.vinyl-icon { flex-shrink: 0; border-radius: 50%; box-shadow: 0 2px 6px rgb(0 0 0 / .18); transition: transform .35s ease; }
+.site-journey:hover .vinyl-icon { transform: rotate(18deg); }
+.site-journey__text { display: grid; flex: 1; min-width: 0; }
+.site-journey__title { font-size: 17px; font-weight: 600; line-height: 1.35; letter-spacing: -.01em; color: var(--color-text-primary); }
+.site-journey__desc { font-size: 15px; line-height: 1.45; color: var(--color-text-secondary); }
+.site-journey__arrow { flex-shrink: 0; color: var(--color-text-secondary); transition: transform .2s ease; }
+.site-journey:hover .site-journey__arrow { transform: translateX(3px); }
+
+.site-header__burger { display: none; place-items: center; width: 40px; height: 40px; border: 1px solid var(--stroke); border-radius: 10px; color: var(--color-text-primary); cursor: pointer; }
+.site-mobile-menu { display: none; }
+
+@keyframes site-menu-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+
+@media (max-width: 1023px) {
+  .site-header__nav, .site-header__cta { display: none; }
+  .site-header__burger { display: grid; }
+  .site-mobile-menu { display: flex; flex-direction: column; max-width: var(--max-content); margin-inline: auto; padding: 8px var(--page-padding) 16px; border-top: 1px solid var(--stroke); }
+  .site-mobile-menu__link { padding: 12px 0; text-align: left; font-size: 16px; font-weight: 500; color: var(--color-text-primary); cursor: pointer; }
+  .site-mobile-menu__heading { margin-top: 12px; padding-top: 16px; border-top: 1px solid var(--stroke); font-size: 14px; font-weight: 600; color: var(--color-text-secondary); }
+  .site-mobile-menu__rows { margin-top: 4px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-header *, .site-getstarted-menu { animation: none !important; transition: none !important; }
+}

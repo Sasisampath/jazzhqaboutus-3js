@@ -10,8 +10,9 @@
 .site-footer__social a:hover { opacity: .7; }
 .site-footer__social img { display: block; width: 22px; height: 22px; }
 .site-footer__marks { display: flex; gap: 14px; margin: 22px 0 0; padding: 0; list-style: none; }
-.site-footer__marks li { width: 60px; height: 60px; overflow: hidden; border-radius: 50%; background: #fff; }
-.site-footer__marks img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.site-footer__mark { display: block; width: 60px; height: 60px; overflow: hidden; border-radius: 50%; background: #fff; cursor: pointer; transition: transform .18s ease, filter .18s ease; }
+.site-footer__mark img { display: block; width: 100%; height: 100%; object-fit: contain; }
+.site-tip:hover .site-footer__mark, .site-tip:focus-within .site-footer__mark, .site-tip.is-open .site-footer__mark { transform: translateY(-2px); filter: brightness(1.08); }
 .site-footer__address { margin-top: 16px; font-size: 14px; font-style: normal; line-height: 1.5; color: rgb(255 255 255 / .82); }
 
 .site-footer__nav { display: flex; gap: clamp(32px, 5vw, 72px); }
@@ -22,18 +23,43 @@
 
 .site-footer__ai { padding-left: clamp(24px, 3.4vw, 52px); border-left: 1px solid rgb(255 255 255 / .12); }
 
-.site-footer__ai-logos { display: flex; flex-wrap: wrap; align-items: center; gap: 20px clamp(32px, 3.4vw, 48px); margin-top: 22px; }
-.site-footer__ai-logo { display: block; padding: 4px; opacity: .72; cursor: pointer; transition: opacity .2s, transform .2s; }
-.site-footer__ai-logo:hover, .site-footer__ai-logo:focus-visible { opacity: 1; transform: translateY(-2px); }
-.site-footer__ai-logo img { display: block; width: auto; height: 30px; }
+.site-footer__ai-logos { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin-top: 22px; }
+.site-footer__ai-logo { display: grid; place-items: center; width: 56px; height: 56px; border: 1px solid rgb(255 255 255 / .14); border-radius: 12px; background: transparent; cursor: pointer; transition: border-color .18s ease, background-color .18s ease; }
+.site-footer__ai-logo:hover, .site-footer__ai-logo:focus-visible { border-color: rgb(255 255 255 / .32); background: rgb(255 255 255 / .04); }
+.site-footer__ai-logo img { display: block; width: auto; height: 28px; }
 
 .site-footer__bottom { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 24px; padding-block: 18px; border-top: 1px solid rgb(255 255 255 / .12); font-size: 14px; color: rgb(255 255 255 / .72); }
 .site-footer__legal { display: flex; align-items: center; }
 .site-footer__legal .site-footer__link { font-size: 14px; }
 .site-footer__legal .site-footer__link + .site-footer__link { margin-left: 20px; padding-left: 20px; border-left: 1px solid rgb(255 255 255 / .25); }
 
-/* Full logo, never cropped: it scales with the container and keeps its own ratio. */
-.site-footer__wordmark { display: block; width: 80%; height: auto; margin-inline: auto; padding-block: clamp(28px, 3.6vw, 52px) clamp(24px, 2.6vw, 36px); }
+/* Full logo, never cropped; only a 12px safe gap below it. */
+.site-footer__wordmark-reveal { position: relative; width: 80%; margin: clamp(48px, 6.4vw, 92px) auto 0; padding-bottom: 12px; }
+.site-footer__wordmark { display: block; width: 100%; height: auto; }
+.site-footer__wordmark--reveal { position: absolute; inset: 0 0 12px; }
+/* Scroll reveal (JS adds .is-scroll-reveal; reduced motion keeps the plain bright logo). */
+.site-footer__wordmark-reveal.is-scroll-reveal { --reveal: -32%; }
+/* Unrevealed state: dark monochrome, Q included; colour only comes from the top layer. */
+.is-scroll-reveal .site-footer__wordmark--base { opacity: .16; filter: grayscale(1) brightness(.6); }
+/* Broad, soft blend (~32%): white → near-white → grey → charcoal → dark. */
+.is-scroll-reveal .site-footer__wordmark--reveal {
+  -webkit-mask-image: linear-gradient(to top, #000 0%, #000 var(--reveal), rgb(0 0 0 / .6) calc(var(--reveal) + 7%), rgb(0 0 0 / .26) calc(var(--reveal) + 16%), rgb(0 0 0 / .07) calc(var(--reveal) + 25%), transparent calc(var(--reveal) + 32%), transparent 100%);
+  mask-image: linear-gradient(to top, #000 0%, #000 var(--reveal), rgb(0 0 0 / .6) calc(var(--reveal) + 7%), rgb(0 0 0 / .26) calc(var(--reveal) + 16%), rgb(0 0 0 / .07) calc(var(--reveal) + 25%), transparent calc(var(--reveal) + 32%), transparent 100%);
+}
+.site-footer__wordmark-reveal:not(.is-scroll-reveal) .site-footer__wordmark--base { visibility: hidden; }
+
+/* Footer tooltips: above the mark, never affect layout. */
+.site-tip { position: relative; display: inline-flex; }
+.site-tip__panel { position: absolute; bottom: calc(100% + 10px); left: 50%; z-index: 20; display: grid; width: max-content; max-width: min(260px, 80vw); padding: 8px 12px; border: 1px solid rgb(255 255 255 / .14); border-radius: 12px; background: #151515; box-shadow: 0 8px 24px rgb(0 0 0 / .4); color: #fff; font-size: 13px; font-weight: 500; line-height: 1.4; text-align: left; white-space: normal; opacity: 0; visibility: hidden; transform: translate(-50%, 4px); transition: opacity .18s ease, transform .18s ease, visibility .18s; pointer-events: none; }
+.site-tip--start .site-tip__panel { left: 0; transform: translate(0, 4px); }
+.site-tip--end .site-tip__panel { left: auto; right: 0; transform: translate(0, 4px); }
+.site-tip:hover .site-tip__panel, .site-tip:focus-within .site-tip__panel, .site-tip.is-open .site-tip__panel { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+.site-tip--start:hover .site-tip__panel, .site-tip--start:focus-within .site-tip__panel, .site-tip--start.is-open .site-tip__panel,
+.site-tip--end:hover .site-tip__panel, .site-tip--end:focus-within .site-tip__panel, .site-tip--end.is-open .site-tip__panel { transform: none; }
+.site-tip__title { font-size: 14px; font-weight: 600; }
+.site-tip__desc { margin-top: 8px; padding-top: 8px; border-top: 1px solid rgb(255 255 255 / .12); font-weight: 400; color: rgb(255 255 255 / .68); }
+.site-footer__marks .site-tip__panel { width: 240px; padding: 12px 14px; }
+@media (prefers-reduced-motion: reduce) { .site-tip__panel, .site-footer__mark, .site-footer__ai-logo { transition: none; } }
 
 @media (max-width: 1023px) {
   .site-footer__main { grid-template-columns: minmax(0, 1fr) auto; }
@@ -44,3 +70,18 @@
   .site-footer__nav { gap: 48px; }
   .site-footer__bottom { flex-direction: column; align-items: flex-start; }
 }
+
+/* "Summarize with AI" confirmation toast (fixed, never affects layout). */
+.site-ai-toast { position: fixed; left: 50%; bottom: 24px; z-index: 100; width: max-content; max-width: calc(100vw - 32px); padding: 12px 18px; border: 1px solid rgb(255 255 255 / .14); border-radius: 12px; background: #151515; box-shadow: 0 12px 32px rgb(0 0 0 / .35); color: #fff; font-size: 14px; font-weight: 500; line-height: 1.4; text-align: center; opacity: 0; visibility: hidden; transform: translate(-50%, 8px); transition: opacity .2s ease, transform .2s ease, visibility .2s; pointer-events: none; }
+.site-ai-toast.is-visible { opacity: 1; visibility: visible; transform: translate(-50%, 0); }
+/* Shown only if the clipboard copy fails. */
+.site-ai-fallback { position: fixed; left: 50%; bottom: 24px; z-index: 101; display: grid; gap: 12px; width: min(420px, calc(100vw - 32px)); padding: 16px; border: 1px solid rgb(255 255 255 / .14); border-radius: 14px; background: #151515; box-shadow: 0 16px 40px rgb(0 0 0 / .45); color: #fff; transform: translateX(-50%); }
+.site-ai-fallback__head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.site-ai-fallback__title { font-size: 15px; font-weight: 600; }
+.site-ai-fallback__close { width: 28px; height: 28px; border-radius: 8px; font-size: 20px; line-height: 1; color: rgb(255 255 255 / .72); cursor: pointer; }
+.site-ai-fallback__close:hover { color: #fff; background: rgb(255 255 255 / .06); }
+.site-ai-fallback__text { width: 100%; height: 120px; padding: 10px; border: 1px solid rgb(255 255 255 / .14); border-radius: 10px; background: #0a090b; color: rgb(255 255 255 / .82); font: inherit; font-size: 12px; line-height: 1.5; resize: none; }
+.site-ai-fallback__actions { display: flex; gap: 10px; }
+.site-ai-fallback__btn { flex: 1; min-height: 40px; padding: 8px 14px; border: 1px solid rgb(255 255 255 / .22); border-radius: 10px; font-size: 14px; font-weight: 500; color: #fff; cursor: pointer; }
+.site-ai-fallback__btn--primary { border-color: #fff; background: #fff; color: #0a090b; }
+@media (prefers-reduced-motion: reduce) { .site-ai-toast { transition: none; } }
