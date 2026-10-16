@@ -1,0 +1,41 @@
+/* "List Your AI Product" page — layout from Figma node 3018:19585
+   (560 / 160 / 880 columns inside a 1600px frame). */
+.vf-page { display: grid; grid-template-columns: minmax(0, 560fr) minmax(0, 880fr); gap: clamp(32px, 8.3vw, 160px); align-items: start; width: min(1600px, 100% - 2 * var(--page-padding)); margin-inline: auto; padding-block: clamp(36px, 4.2vw, 80px) clamp(48px, 5.2vw, 100px); }
+.vf-left { display: flex; flex-direction: column; gap: clamp(28px, 3.1vw, 60px); min-width: 0; }
+.vf-left h1 { font-family: var(--font-display); font-size: var(--fs-h2); font-weight: 700; line-height: 1.25; letter-spacing: var(--ls-h2); color: var(--color-text-primary); }
+.vf-left h1 + p { margin-top: 12px; font-size: var(--fs-sub); line-height: var(--lh-sub); color: var(--color-text-secondary); }
+
+/* The frame has the video's own 4:5 ratio: full picture, no bars, no cropping. */
+.vf-video { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border-radius: 16px; }
+.vf-video video { display: block; width: 100%; height: 100%; object-fit: contain; cursor: pointer; }
+.vf-video__controls { position: absolute; inset: auto 14px 14px; display: flex; justify-content: flex-end; gap: 8px; pointer-events: none; }
+.vf-video__controls button { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: rgb(0 0 0 / .55); color: #fff; cursor: pointer; pointer-events: auto; transition: background-color .2s; }
+.vf-video__controls button:hover { background: rgb(0 0 0 / .75); }
+.vf-video__controls button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+.vf-trusted__label { margin-bottom: 20px; font-size: var(--fs-body); line-height: var(--lh-body); color: var(--color-text-primary); }
+/* Same ticker component as the homepage; here it runs edge to edge of the column. */
+.vf-ticker.logo-strip-marquee { min-height: 96px; border-color: var(--stroke); background: transparent; }
+.vf-ticker .logo-strip-marquee__track-wrap { min-height: 94px; }
+.vf-ticker .logo-strip-marquee__track { padding-inline: 0; }
+.vf-ticker .logo-strip-marquee__fade { display: none; }
+.vf-ticker .logo-strip-marquee__track-wrap { mask-image: linear-gradient(to right, #000 82%, transparent); }
+
+.vf-panel { position: relative; min-width: 0; overflow: hidden; padding: 64px clamp(16px, 11.7%, 103px); border-radius: 20px; }
+.vf-panel--buyer { background: var(--color-buyer); }
+.vf-panel--vendor { background: var(--color-vendor); }
+.vf-panel--partner { background: var(--color-partner); }
+/* Sized to the form's rendered height (Fillout does not scale with width),
+   so the gradient panel is never taller than the form needs. */
+.vf-fillout { position: relative; display: block; width: 100%; height: 760px; border: 0; border-radius: 18px; background: #fff; }
+.vf-fillout--pending { display: grid; place-items: center; font-size: var(--fs-small); color: var(--color-text-secondary); }
+
+@media (max-width: 1199px) {
+  .vf-panel { padding: 40px clamp(16px, 6%, 48px); }
+}
+@media (max-width: 899px) {
+  .vf-page { grid-template-columns: minmax(0, 1fr); gap: 40px; }
+  .vf-video { width: 100%; }
+  .vf-panel { padding: 24px 16px; }
+  .vf-fillout { height: 870px; }
+}
