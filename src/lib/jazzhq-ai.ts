@@ -340,7 +340,7 @@ Keep the answer useful, specific and easy to scan.`;
 export const AI_PROVIDERS = {
   chatgpt: { label: "ChatGPT", url: "https://chatgpt.com/", logo: "/ai-logos/chatgpt.svg" },
   claude: { label: "Claude", url: "https://claude.ai/new", logo: "/ai-logos/claude.svg" },
-  gemini: { label: "Gemini", url: "https://gemini.google.com/app", logo: "/ai-logos/gemini.svg" },
+  gemini: { label: "Google AI", url: "https://www.google.com/search?udm=50&hl=en", logo: "/ai-logos/gemini.svg" },
   grok: { label: "Grok", url: "https://grok.com/", logo: "/ai-logos/grok.svg" },
 } as const;
 
@@ -378,8 +378,32 @@ export async function copyJazzHQPrompt(): Promise<boolean> {
   return copyWithTextarea(JAZZHQ_AI_PROMPT);
 }
 
+// Each provider opens with a prefilled ?q= query. The "gemini" tile opens
+// Google AI Mode (udm=50).
+const PROVIDER_URLS: Record<AIProviderKey, (q: string) => string> = {
+  chatgpt: (q) => `https://chatgpt.com/?q=${q}`,
+  claude: (q) => `https://claude.ai/new?q=${q}`,
+  gemini: (q) => `https://www.google.com/search?udm=50&hl=en&q=${q}`,
+  grok: (q) => `https://grok.com/?q=${q}`,
+};
+
+// The full brief makes Grok's URL too long (HTTP 431), so Grok gets this
+// short question in the URL; the full brief is still copied to the clipboard.
+const GROK_DEEP_LINK_PROMPT =
+  "What is JazzHQ? Explain JazzHQ as a full-stack AI distribution platform for AI-first companies. Cover who it is built for — AI vendors, buyers, and channel partners — the problems it solves, how companies use JazzHQ to grow through channel partnerships, and its key products and capabilities including partner distribution, Partner OS, Rehearse AI training and role-play, and the marketplace. Give me a clear overview of how JazzHQ works and the value it provides.";
+
+// Short question for Google AI Mode; the full brief is still copied.
+const GOOGLE_AI_PROMPT =
+  "What is JazzHQ? Explain what it is, what problems it solves, who it is built for, its key products and capabilities, and how it helps AI companies grow through buyers, partners, and channel distribution.";
+
+export function providerUrl(provider: AIProviderKey) {
+  const prompt =
+    provider === "grok" ? GROK_DEEP_LINK_PROMPT : provider === "gemini" ? GOOGLE_AI_PROMPT : JAZZHQ_AI_PROMPT;
+  return PROVIDER_URLS[provider](encodeURIComponent(prompt));
+}
+
 export function openAIProvider(provider: AIProviderKey) {
-  window.open(AI_PROVIDERS[provider].url, "_blank", "noopener,noreferrer");
+  window.open(providerUrl(provider), "_blank", "noopener,noreferrer");
 }
 
 // Must be called directly from the click handler: the copy starts and the new

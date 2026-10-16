@@ -32,7 +32,8 @@ export function FooterAI() {
     const { copied } = await openJazzHQWithAI(provider);
     if (copied) {
       setFallback(null);
-      showToast(`JazzHQ brief copied — paste it into ${AI_PROVIDERS[provider].label}`);
+      const { label } = AI_PROVIDERS[provider];
+      showToast(`Opening ${label} with the JazzHQ brief`);
     } else {
       setManualCopied(false);
       setFallback(provider);
