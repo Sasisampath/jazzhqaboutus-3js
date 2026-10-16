@@ -11,6 +11,7 @@ export function NavItem({
   onNavigate,
   role,
   ariaLabel,
+  ariaCurrent,
 }: {
   href: NavDestination;
   className?: string;
@@ -18,9 +19,10 @@ export function NavItem({
   onNavigate?: () => void;
   role?: string;
   ariaLabel?: string;
+  ariaCurrent?: "page";
 }) {
   if (href) {
-    return <Link href={href} className={className} onClick={onNavigate} role={role} aria-label={ariaLabel}>{children}</Link>;
+    return <Link href={href} className={className} onClick={onNavigate} role={role} aria-label={ariaLabel} aria-current={ariaCurrent}>{children}</Link>;
   }
   return <button type="button" className={className} onClick={onNavigate} role={role} aria-label={ariaLabel}>{children}</button>;
 }

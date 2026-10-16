@@ -14,9 +14,11 @@ export const ROUTES = {
 export type NavDestination = string | null;
 
 export const NAV_ITEMS: { label: string; href: NavDestination }[] = [
-  { label: "Home", href: ROUTES.home },
+  { label: "Home", href: null },
   { label: "About Us", href: ROUTES.aboutUs },
+  { label: "Events", href: null },
   { label: "Marketplace", href: null },
+  { label: "Stories", href: null },
 ];
 
 export type JourneyKey = "buyer" | "vendor" | "partner";

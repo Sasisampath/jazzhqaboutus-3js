@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { ArrowRight, ChevronDown, Menu, X } from "lucide-react";
@@ -32,6 +33,8 @@ export function Header() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const pathname = usePathname();
+  const isCurrent = (href: string | null) => href !== null && href === pathname;
 
   useEffect(() => {
     if (!open) return;
@@ -79,7 +82,9 @@ export function Header() {
 
         <nav className="site-header__nav" aria-label="Primary">
           {NAV_ITEMS.map((item) => (
-            <NavItem key={item.label} href={item.href} className="site-header__link">{item.label}</NavItem>
+            <NavItem key={item.label} href={item.href} className={`site-header__link${isCurrent(item.href) ? " is-current" : ""}`} ariaCurrent={isCurrent(item.href) ? "page" : undefined}>
+              <span className="site-nav-label">{item.label}</span>
+            </NavItem>
           ))}
         </nav>
 
@@ -124,7 +129,9 @@ export function Header() {
       {menuOpen && (
         <div id="site-mobile-menu" className="site-mobile-menu">
           {NAV_ITEMS.map((item) => (
-            <NavItem key={item.label} href={item.href} className="site-mobile-menu__link" onNavigate={() => setMenuOpen(false)}>{item.label}</NavItem>
+            <NavItem key={item.label} href={item.href} className={`site-mobile-menu__link${isCurrent(item.href) ? " is-current" : ""}`} ariaCurrent={isCurrent(item.href) ? "page" : undefined} onNavigate={() => setMenuOpen(false)}>
+              <span className="site-nav-label">{item.label}</span>
+            </NavItem>
           ))}
           <p className="site-mobile-menu__heading">Get started</p>
           <div className="site-mobile-menu__rows">

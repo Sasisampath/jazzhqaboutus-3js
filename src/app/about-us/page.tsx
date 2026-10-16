@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { GridBackground } from "@/components/layout/grid-background";
-import { TopBanner } from "@/components/layout/top-banner";
 import { Header } from "@/components/layout/header";
 import Footer from "@/components/shared/footer";
 import { FounderStory } from "@/components/about/founder-story";
@@ -19,7 +18,6 @@ export const metadata: Metadata = pageSeo({
 export default function AboutPage() {
   return (
     <GridBackground>
-      <TopBanner />
       <Header />
       <main className="au-page flex-1">
         <FounderStory />
