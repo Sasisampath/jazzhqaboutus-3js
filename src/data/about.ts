@@ -139,7 +139,7 @@ export type AboutInvestor = {
   name: string;
   role: string;
   photo: string;
-  accent: "green" | "red" | "purple";
+  accent: "green" | "red" | "purple" | "yellow";
 };
 
 export const ABOUT_BACKED_TITLE = "Backed by the Best in the Industry";
@@ -165,6 +165,18 @@ export const ABOUT_INVESTORS: AboutInvestor[] = [
     role: "Founder & CEO, SurveySparrow;\nPrev. Emp #1 & Co-founder - Freshservice",
     photo: "/assets/backed-by/advisor-shihab.webp",
     accent: "purple",
+  },
+  {
+    name: "Chris Perrine",
+    role: "Revenue Leader | G2, Forrester, IDC",
+    photo: "/assets/backed-by/advisor-chris.webp",
+    accent: "yellow",
+  },
+  {
+    name: "Arun Mani",
+    role: "Chief Revenue Officer (CRO), Pleo | Freshworks | McKinsey",
+    photo: "/assets/backed-by/advisor-arun.webp",
+    accent: "green",
   },
 ];
 
